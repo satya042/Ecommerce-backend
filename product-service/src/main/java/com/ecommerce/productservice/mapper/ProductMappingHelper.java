@@ -12,17 +12,16 @@ public final class ProductMappingHelper {
         if (product == null) {
             return null;
         }
-
-        ProductResponse response = new ProductResponse();
-        response.setProductId(product.getProductId());
-        response.setSku(product.getSku());
-        response.setProductTitle(product.getProductTitle());
-        response.setDescription(product.getDescription());
-        response.setPrice(product.getPrice());
-        response.setQuantity(product.getQuantity());
-        response.setBrand(product.getBrand());
-        response.setProductStatus(product.getProductStatus());
-        response.setCategory(CategoryMappingHelper.categoryToResponse(product.getCategory()));
-        return response;
+        return ProductResponse.builder()
+        .productId(product.getProductId())
+        .sku(product.getSku())
+        .productTitle(product.getProductTitle())
+        .description(product.getDescription())
+        .price(product.getPrice())
+        .quantity(product.getQuantity())
+        .brand(product.getBrand())
+        .productStatus(product.getProductStatus())
+        .category(CategoryMappingHelper.categoryToResponse(product.getCategory()))
+        .build();
     }
 }

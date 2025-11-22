@@ -1,6 +1,8 @@
 package com.ecommerce.productservice.dto.response;
 
 import com.ecommerce.productservice.model.ProductStatus;
+
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -9,6 +11,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
+@Builder
 public class ProductResponse {
     private UUID productId;
     private String sku;

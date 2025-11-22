@@ -56,14 +56,12 @@ public class ProductServiceImpl implements ProductService {
 
 	@Override
 	public ProductResponse createProduct(ProductRequest productRequest) {
-		String normalizedSku = normalize(productRequest.getSku());
-		if (productRepository.existsBySkuIgnoreCase(normalizedSku)) {
-			throw new DuplicateResourceException("Product already exists with sku: " + normalizedSku);
-		}
+		String prefix = productRequest.getProductTitle().substring(0, Math.min(3,  productRequest.getProductTitle().length())).toUpperCase().replaceAll("[^A-Z]", "");
+		String random = UUID.randomUUID().toString().substring(0,6).toUpperCase();
+		String productSku =  prefix + "-" + random;
 
-		Product product = new Product();
-		applyRequestToProduct(productRequest, product);
-		product.setSku(normalizedSku);
+		Product product = applyRequestToProduct(productRequest);
+		product.setSku(productSku);
 		Product savedProduct = productRepository.save(product);
 		log.info("Product {} is saved", savedProduct.getProductId());
 		return ProductMappingHelper.productToResponse(savedProduct);
@@ -74,16 +72,12 @@ public class ProductServiceImpl implements ProductService {
 		Product product = productRepository.findById(productId)
 				.orElseThrow(() -> new ProductNotFoundException("Product not found with id: " + productId));
 
-		String normalizedSku = normalize(productRequest.getSku());
-		if (productRepository.existsBySkuIgnoreCaseAndProductIdNot(normalizedSku, productId)) {
-			throw new DuplicateResourceException("Another product already exists with sku: " + normalizedSku);
-		}
-
-		applyRequestToProduct(productRequest, product);
-		product.setSku(normalizedSku);
-		Product updatedProduct = productRepository.save(product);
-		log.info("Product {} is updated", updatedProduct.getProductId());
-		return ProductMappingHelper.productToResponse(updatedProduct);
+		Product updatedProduct = applyRequestToProduct(productRequest);
+		updatedProduct.setProductId(productId);
+		updatedProduct.setSku(product.getSku());
+		Product saveProduct = productRepository.save(updatedProduct);
+		log.info("Product {} is updated", saveProduct.getProductId());
+		return ProductMappingHelper.productToResponse(saveProduct);
 	}
 
 	@Override
@@ -94,22 +88,23 @@ public class ProductServiceImpl implements ProductService {
 		log.info("Product {} is deleted", productId);
 	}
 
-	private void applyRequestToProduct(ProductRequest request, Product product) {
-		product.setProductTitle(normalize(request.getProductTitle()));
-		product.setDescription(request.getDescription());
-		product.setPrice(request.getPrice());
-		product.setQuantity(request.getQuantity());
-		product.setBrand(normalize(request.getBrand()));
-		product.setProductStatus(request.getProductStatus());
-		product.setCategory(resolveCategory(request.getCategoryId()));
+	private Product applyRequestToProduct(ProductRequest request) {
+        if (request == null) {
+            return null;
+        }
+        return Product.builder()
+        .productTitle(request.getProductTitle().trim())
+        .description(request.getDescription().trim())
+        .price(request.getPrice())
+		.quantity(request.getQuantity())
+        .brand(request.getBrand().trim())
+        .productStatus(request.getProductStatus())
+		.category(resolveCategory(request.getCategoryId()))
+        .build();
 	}
 
 	private Category resolveCategory(Integer categoryId) {
 		return categoryRepository.findById(categoryId)
 				.orElseThrow(() -> new CategoryNotFoundException("Category not found with id: " + categoryId));
-	}
-
-	private String normalize(String value) {
-		return value == null ? null : value.trim();
 	}
 }

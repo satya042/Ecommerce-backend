@@ -18,9 +18,6 @@ public class ProductRequest {
 	@NotBlank(message = "Product title cannot be blank")
 	private String productTitle;
 
-	@NotBlank(message = "SKU cannot be blank")
-	private String sku;
-
 	@Size(max = 500, message = "Description cannot exceed 500 characters")
 	private String description;
 
